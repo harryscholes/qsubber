@@ -1,0 +1,214 @@
+#!/usr/bin/env python
+
+# TODO
+# - job array
+
+'''qsubber is a submission script compiler and job submitter for SGE/qsub.
+
+Usage:
+    python qsubber.py submit [job_name] [script --and --args] [--options]
+'''
+import fire
+import subprocess
+import tempfile
+import os
+
+
+class Qsubber:
+    def __init__(self):
+        # Set default attributes
+        self.dir = os.path.dirname(os.path.realpath(__file__))
+        self._SGE_defaults()
+        self._job_defaults()
+        # List of accepted parameters
+        self._accepted_params = list(self._SGE_params.keys()) + \
+            list(self._job_params.keys())
+        # Helpful aliases for various commands
+        self._aliases = {
+            'wd': 'working_directory',
+            'rt': 'run_time',
+            'mem': 'memory',
+            'R': 'resource_request',
+            'pe': 'parallel',
+            'venv': 'virtual_env',
+            'res': 'results_dir',
+            'out': 'output_dir'}
+
+    def _SGE_defaults(self):
+        '''Default SGE attributes.
+        '''
+        self._SGE_params = {
+            'shell': '/bin/bash',
+            'resource_request': 'y',
+            'working_directory': '$HOME/results',
+            'run_time': '1:00:0',
+            'memory': '1.8G',
+            'scratch': '10G',
+            'parallel': None,
+            'gpu': None,
+            'submit_command': 'qsub',
+            'submission_script_path': None,
+            'job_array': None}
+
+        for k, v in self._SGE_params.items():
+            setattr(self, k, v)
+
+    def _job_defaults(self):
+        '''Default job attributes.
+        '''
+        self._job_params = {
+            'virtual_env': None,
+            'results_dir': '$HOME/results',
+            'output_dir': '/scratch0/$USER/${JOB_NAME}_${JOB_ID}${sti}'}
+
+        for k, v in self._job_params.items():
+            setattr(self, k, v)
+
+    def _SGE_options(self):
+        '''Set SGE options considering any `kwargs` provided by the user.
+        '''
+        # Required options for all jobs
+        self.SGE_command = [
+            f'-N {self.name}',
+            f'-S {self.shell}',
+            f'-wd {self.working_directory}',
+            f'-l h_rt={self.run_time}',
+            f'-l tmem={self.memory}',
+            f'-R {self.resource_request}']
+        # GPU options
+        if self.gpu is None:
+            self.SGE_command.append(f'-l tmem={self.memory}')
+        elif isinstance(self.gpu, int) and 0 < self.gpu < 5:
+            for i in ['-P gpu', f'-l gpu={self.gpu}']:
+                self.SGE_command.append(i)
+        else:
+            raise ArgumentError('Number of GPUs must be an int between 1-4')
+        # Parallel environment options
+        if self.parallel is None:
+            pass
+        elif isinstance(self.parallel, int) and self.parallel > 0:
+            self.SGE_command.append(f'-pe smp {self.parallel}')
+        else:
+            raise ArgumentError('Number of CPUs must be an int > 0')
+        # Job array options
+        if self.job_array is None:
+            pass
+        elif all([True for i in self.job_array.split('-')
+                  if isinstance(i, int) and i > 0]):
+            # Sets $SGE_TASK_ID range
+            self.SGE_command.append(f'-t {self.job_array}')
+        else:
+            raise ArgumentError('Job array must be a range e.g. 1-10')
+        self.SGE_command = ' '.join(self.SGE_command)
+
+    def _compile_script(self):
+        '''Compile submission script.
+        '''
+        job_commands = []
+
+        if self.virtual_env is None:
+            job_commands.append(f'virtual_env=')
+        else:
+            job_commands.append(f'virtual_env={self.virtual_env}')
+
+        job_commands.append(f'output_dir={self.output_dir}')
+        job_commands.append(f'results_dir={self.results_dir}')
+
+        with open(os.path.join(self.dir, 'prologue.sh'), 'r') as f:
+            for l in f.readlines():
+                job_commands.append(l.rstrip())
+
+        if self.gpu is not None:
+            with open(os.path.join(self.dir, 'gpu.sh'), 'r') as f:
+                for l in f.readlines():
+                    job_commands.append(l.rstrip())
+
+            self.executable = '/share/apps/libc6_2.23/lib/x86_64-linux-gnu/ld-2.23.so $(command -v $python)'
+        else:
+            self.executable = '$python'
+
+        log = ('echo DATE                  $the_date',
+               'echo USER                  $USER',
+               'echo HOSTNAME              $HOSTNAME',
+               'echo JOB_NAME              $JOB_NAME',
+               'echo JOB_ID                $JOB_ID',
+               'echo SGE_TASK_ID           $SGE_TASK_ID',
+               'echo PWD                   $PWD',
+               'echo CUDA_VISIBLE_DEVICES  $CUDA_VISIBLE_DEVICES',
+               'echo STARTED $($the_time)')
+
+        for l in log:
+            job_commands.append(l)
+
+        job_commands.append(
+            f'{self.executable} -u {self.job} && CODE_DONE=true')
+
+        with open(os.path.join(self.dir, 'epilogue.sh'), 'r') as f:
+            for l in f.readlines():
+                job_commands.append(l.rstrip())
+
+        job_commands.append('')  # Ensure file ends on a blank line
+
+        if self.submission_script_path is None:
+            self.script = tempfile.NamedTemporaryFile('w+', delete=False)
+        else:
+            self.script = open(self.submission_script_path, 'w+')
+
+        self.script.write('\n'.join(job_commands))
+        self.script.close()
+
+    def submit(self, job_name: str, script_and_args: str, **kwargs):
+        '''Compile the job submission script and submit the job to SGE.
+
+        # Arguments:
+            job_name: str, used by SGE to set $JOB_NAME
+            script_and_args: str, script and command line arguments to be run
+                in the the job, e.g. "my_script.py -a foo -b bar"
+            kwargs: str, job options, e.g. "--gpu 1". Must be in
+                `_accepted_params`
+
+        # Raises:
+            ArgumentError: if `kwarg` is not in `_accepted_params`
+        '''
+        self.name = job_name
+        self.job = script_and_args
+
+        # Set command line options
+        for k, v in kwargs.items():
+            if k in self._accepted_params:
+                setattr(self, k, v)
+            elif k in self._aliases:
+                setattr(self, self._aliases[k], v)
+            else:
+                raise ArgumentError(f'Not a valid argument: {k}')
+
+        self._SGE_options()
+
+        print(f'{self.submit_command} {self.SGE_command}\n')
+
+        self._compile_script()
+
+        if self.submit_command == 'cat':
+            subprocess.call(
+                f'{self.submit_command} {self.script.name}', shell=True)
+        else:
+            subprocess.call(
+                f'{self.submit_command} {self.SGE_command} {self.script.name}',
+                shell=True)
+
+
+class ArgumentError(Exception):
+    '''Command line argument error.'''
+
+
+logo = '''                  _     _
+   __ _ ___ _   _| |__ | |__   ___ _ __ TM
+  / _` / __| | | | '_ \| '_ \ / _ \ '__|
+ | (_| \__ \ |_| | |_) | |_) |  __/ |
+  \__, |___/\__,_|_.__/|_.__/ \___|_|
+     |_|    Like qsub, but better
+'''
+
+if __name__ == '__main__':
+    print(logo)
+    fire.Fire(Qsubber().submit)
