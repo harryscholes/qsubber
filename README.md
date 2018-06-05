@@ -1,10 +1,10 @@
 ```
-                  _     _
-   __ _ ___ _   _| |__ | |__   ___ _ __ TM
-  / _` / __| | | | '_ \| '_ \ / _ \ '__|
- | (_| \__ \ |_| | |_) | |_) |  __/ |
-  \__, |___/\__,_|_.__/|_.__/ \___|_|
-     |_|    Like qsub, but better
+                 _     _
+   ___ ___ _   _| |__ | |__   ___ _ __ TM
+ / _` / __| | | | '_ \| '_ \ / _ \ '__|
+| (_| \__ \ |_| | |_) | |_) |  __/ |
+ \__, |___/\__,_|_.__/|_.__/ \___|_|
+    |_|    Like qsub, but better
 ```
 
 `qsubber` is a submission script compiler and job submitter for SGE/qsub.
@@ -38,6 +38,9 @@ Edit the following files:
 `epilogue.sh` | Save the job output and tear down the job environment
 
 ## Options
+
+Specify options like this: `--PARAMETER VALUE`
+
 **Parameter** | **Default** | **Alias**
 --- | --- | ---
 `shell` | `/bin/bash`
@@ -54,6 +57,6 @@ Edit the following files:
 `results_dir` | `$HOME/results` | `res`
 `output_dir` | `/scratch0/$USER/${JOB_NAME}_${JOB_ID}${sti}` | `out`
 
-* Setting `submission_script_path` to a path will save the compiled submission script
+Setting `submission_script_path` to a path will save the compiled submission script
 
 # 👾
