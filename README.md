@@ -7,11 +7,26 @@
     |_|    Like qsub, but better
 ```
 
-`qsubber` is a submission script compiler and job submitter for SGE/qsub.
+`qsubber` is a submission script compiler and job submitter for [SGE](https://en.wikipedia.org/wiki/Oracle_Grid_Engine)/qsub.
 
 ## Why?
 
-Job submission scripts quickly accumulate when using SGE and are difficult to organise and maintain. Most submission scripts contain boilerplate setup/teardown code around the specific job command that is repeated in multiple scripts. `qsubber` solves these two problems by centralising the boilerplate code and providing an intuitive API to compile submission scripts and submit them to the queue.
+Submission scripts accumulate quickly when using SGE. These scripts are difficult to organise and maintain.
+
+Most submission scripts contain the specific job being run and some boilerplate setup/teardown code. For example, a typical Python job might look something like this:
+
+```bash
+# Setup
+...
+
+# Job
+python ...
+
+# Teardown
+...
+```
+
+`qsubber` solves these problems by centralising the boilerplate code and providing an intuitive API to compile submission scripts and submit them to SGE.
 
 ## Usage
 
@@ -41,21 +56,21 @@ Edit the following files:
 
 Specify options like this: `--PARAMETER VALUE`
 
-**Parameter** | **Default** | **Alias**
---- | --- | ---
-`shell` | `/bin/bash`
-`resource_request` | `y` | `R`
-`working_directory` | `$HOME/results` | `wd`
-`run_time` | `1:00:0` | `rt`
-`memory` | `1.8G` | `mem`
-`scratch` | `10G`
-`parallel` | `None` | `pe`
-`gpu` | `None`
+**Parameter** | **Alias** | **Default** | **Example value**
+--- | --- | --- | ---
+`shell` | | `/bin/bash`
+`resource_request` | `R` | `y`
+`working_directory` | `wd` | `$HOME/results`
+`run_time` | `rt` | `1:00:0`
+`memory` | `mem` | `1.8G`
+`scratch` | | `10G`
+`parallel` | `pe` | `None` | `4`
+`gpu` | | `None` | `1`
 `submit_command` | `qsub`
-`submission_script_path` | `None`
-`virtual_env` | `None` | `venv`
-`results_dir` | `$HOME/results` | `res`
-`output_dir` | `/scratch0/$USER/${JOB_NAME}_${JOB_ID}${sti}` | `out`
+`submission_script_path` | | `None` | `$HOME/qsub.sh`
+`virtual_env` | `venv` | `None` | `conda_env`
+`results_dir` | `res` | `$HOME/results`
+`output_dir` | `out` | `/scratch0/$USER/${JOB_NAME}_${JOB_ID}${sti}`
 
 Setting `submission_script_path` to a path will save the compiled submission script
 
