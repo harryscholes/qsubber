@@ -34,6 +34,12 @@ python ...
 ./qsubber JOB_NAME SCRIPT_AND_ARGS [--KWARGS ...]
 ```
 
+Example:
+
+```
+./qsubber long_gpu_job "~/gpu_script.py --foo bar --baz qux" --gpu 1 --rt 5:00:0 --mem 15.5G
+```
+
 ## Dependencies
 
 * [Fire](https://github.com/google/python-fire)
