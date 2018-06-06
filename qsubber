@@ -1,8 +1,4 @@
 #!/usr/bin/env python
-
-# TODO
-# - job array
-
 '''qsubber is a submission script compiler and job submitter for SGE/qsub.
 
 Usage:
