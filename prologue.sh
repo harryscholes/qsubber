@@ -1,6 +1,5 @@
 # Time and date for logging
 the_date=$(date +%Y-%m-%d)
-the_time='date +%H:%M:%S'
 # Set $sti to $SGE_TASK_ID if the job is part of an array
 [ $SGE_TASK_ID = 'undefined' ] && sti='' || sti=_$SGE_TASK_ID
 # Do work in scratch

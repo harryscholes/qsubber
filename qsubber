@@ -132,7 +132,7 @@ class Qsubber:
                'echo SGE_TASK_ID           $SGE_TASK_ID',
                'echo PWD                   $PWD',
                'echo CUDA_VISIBLE_DEVICES  $CUDA_VISIBLE_DEVICES',
-               'echo STARTED $($the_time)')
+               'echo STARTED $(date +%H:%M:%S)')
 
         for l in log:
             job_commands.append(l)
