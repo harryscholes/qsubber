@@ -77,6 +77,7 @@ Specify options like this: `--PARAMETER VALUE`
 `virtual_env` | `venv` | `None` | `conda_env`
 `results_dir` | `res` | `$HOME/results`
 `output_dir` | `out` | `/scratch0/$USER/${JOB_NAME}_${JOB_ID}${sti}`
+`buffered` | | `True` | `False` to make `STDOUT` & `STDERR` unbuffered
 
 Setting `submission_script_path` to a path will save the compiled submission script
 

@@ -55,7 +55,8 @@ class Qsubber:
         self._job_params = {
             'virtual_env': None,
             'results_dir': '$HOME/results',
-            'output_dir': '/scratch0/$USER/${JOB_NAME}_${JOB_ID}${sti}'}
+            'output_dir': '/scratch0/$USER/${JOB_NAME}_${JOB_ID}${sti}',
+            'buffered': True}
 
         for k, v in self._job_params.items():
             setattr(self, k, v)
@@ -137,7 +138,7 @@ class Qsubber:
             job_commands.append(l)
 
         job_commands.append(
-            f'{self.executable} -u {self.job} && CODE_DONE=true')
+            f'{self.executable} {"-u" if not self.buffered else ""} {self.job} && CODE_DONE=true')
 
         with open(os.path.join(self.dir, 'epilogue.sh'), 'r') as f:
             for l in f.readlines():
