@@ -74,7 +74,7 @@ class Qsubber:
             f'-R {self.resource_request}']
         # GPU options
         if self.gpu is None:
-            self.SGE_command.append(f'-l tmem={self.memory}')
+            self.SGE_command.append(f'-l h_vmem={self.memory}')
         elif isinstance(self.gpu, int) and 0 < self.gpu < 5:
             for i in ['-P gpu', f'-l gpu={self.gpu}']:
                 self.SGE_command.append(i)
