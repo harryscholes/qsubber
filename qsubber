@@ -64,11 +64,11 @@ class Qsubber:
             'buffered': True}
 
         if self.machine == 'CSCLUSTER':
-            self._SGE_params['output_dir'] = '/scratch0/$USER/${JOB_NAME}_${JOB_ID}${sti}'
-            self._SGE_params['results_dir'] = '$HOME/results'
+            self._job_params['output_dir'] = '/scratch0/$USER/${JOB_NAME}_${JOB_ID}${sti}'
+            self._job_params['results_dir'] = '$HOME/results'
         elif self.machine == 'MYRIAD':
-            self._SGE_params['output_dir'] = '$TMPDIR'
-            self._SGE_params['results_dir'] = '$HOME/Scratch'
+            self._job_params['output_dir'] = '$TMPDIR'
+            self._job_params['results_dir'] = '$HOME/Scratch'
 
         for k, v in self._job_params.items():
             setattr(self, k, v)
