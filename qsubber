@@ -12,6 +12,8 @@ import os
 
 class Qsubber:
     def __init__(self):
+        self.machine = os.environ['QSUBBERMACHINE']
+
         # Set default attributes
         self.dir = os.path.dirname(os.path.realpath(__file__))
         self._SGE_defaults()
@@ -28,7 +30,8 @@ class Qsubber:
             'pe': 'parallel',
             'venv': 'virtual_env',
             'res': 'results_dir',
-            'out': 'output_dir'}
+            'out': 'output_dir',
+            'scratch': 'tmpfs'}
 
     def _SGE_defaults(self):
         '''Default SGE attributes.
@@ -36,15 +39,19 @@ class Qsubber:
         self._SGE_params = {
             'shell': '/bin/bash',
             'resource_request': 'y',
-            'working_directory': '$HOME/results',
             'run_time': '1:00:0',
             'memory': '1.8G',
-            'scratch': '10G',
+            'tmpfs': '10G',
             'parallel': None,
             'gpu': None,
             'submit_command': 'qsub',
             'submission_script_path': None,
             'job_array': None}
+
+        if self.machine == 'CSCLUSTER':
+            self._SGE_params['working_directory'] = '$HOME/results'
+        elif self.machine == 'MYRIAD':
+            self._SGE_params['working_directory'] = '$HOME/Scratch'
 
         for k, v in self._SGE_params.items():
             setattr(self, k, v)
@@ -54,9 +61,14 @@ class Qsubber:
         '''
         self._job_params = {
             'virtual_env': None,
-            'results_dir': '$HOME/results',
-            'output_dir': '/scratch0/$USER/${JOB_NAME}_${JOB_ID}${sti}',
             'buffered': True}
+
+        if self.machine == 'CSCLUSTER':
+            self._SGE_params['output_dir'] = '/scratch0/$USER/${JOB_NAME}_${JOB_ID}${sti}'
+            self._SGE_params['results_dir'] = '$HOME/results'
+        elif self.machine == 'MYRIAD':
+            self._SGE_params['output_dir'] = '$TMPDIR'
+            self._SGE_params['results_dir'] = '$HOME/Scratch'
 
         for k, v in self._job_params.items():
             setattr(self, k, v)
@@ -70,16 +82,31 @@ class Qsubber:
             f'-S {self.shell}',
             f'-wd {self.working_directory}',
             f'-l h_rt={self.run_time}',
-            f'-l tmem={self.memory}',
             f'-R {self.resource_request}']
+
+        # Cluster-specific options
+        if self.machine == 'CSCLUSTER':
+            self.SGE_command.append(f'-l tmem={self.memory}')
+            self.SGE_command.append(f'-l tscatch={self.tmpfs}')
+
+            if self.gpu is None:
+                self.SGE_command.append(f'-l h_vmem={self.memory}')
+
+        elif os.environ['QSUBBERMACHINE'] == 'MYRIAD':
+            self.SGE_command.append(f'-l mem={self.memory}')
+            self.SGE_command.append(f'-l tmpfs={self.tmpfs}')
+        else:
+            raise OSError('$QSUBBERMACHINE is not set')
+
         # GPU options
-        if self.gpu is None:
-            self.SGE_command.append(f'-l h_vmem={self.memory}')
-        elif isinstance(self.gpu, int) and 0 < self.gpu < 5:
-            for i in ['-P gpu', f'-l gpu={self.gpu}']:
-                self.SGE_command.append(i)
+        if isinstance(self.gpu, int) and 0 < self.gpu < 5:
+            self.SGE_command.append(f'-l gpu={self.gpu}')
+
+            if os.environ['QSUBBERMACHINE'] == 'CSCLUSTER':
+                self.SGE_command.append('-P gpu')
         else:
             raise ArgumentError('Number of GPUs must be an int between 1-4')
+
         # Parallel environment options
         if self.parallel is None:
             pass
