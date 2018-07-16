@@ -92,7 +92,7 @@ class Qsubber:
             if self.gpu is None:
                 self.SGE_command.append(f'-l h_vmem={self.memory}')
 
-        elif os.environ['QSUBBERMACHINE'] == 'MYRIAD':
+        elif self.machine == 'MYRIAD':
             self.SGE_command.append(f'-l mem={self.memory}')
             self.SGE_command.append(f'-l tmpfs={self.tmpfs}')
         else:
@@ -103,7 +103,7 @@ class Qsubber:
             if isinstance(self.gpu, int) and 0 < self.gpu < 5:
                 self.SGE_command.append(f'-l gpu={self.gpu}')
 
-                if os.environ['QSUBBERMACHINE'] == 'CSCLUSTER':
+                if self.machine == 'CSCLUSTER':
                     self.SGE_command.append('-P gpu')
             else:
                 raise ArgumentError('Number of GPUs must be an int between 1-4')
@@ -144,11 +144,19 @@ class Qsubber:
                 job_commands.append(l.rstrip())
 
         if self.gpu is not None:
-            with open(os.path.join(self.dir, 'gpu.sh'), 'r') as f:
-                for l in f.readlines():
-                    job_commands.append(l.rstrip())
+            if self.machine == 'CSCLUSTER':
+                with open(os.path.join(self.dir, 'gpu.sh'), 'r') as f:
+                    for l in f.readlines():
+                        job_commands.append(l.rstrip())
 
-            self.executable = '/share/apps/libc6_2.23/lib/x86_64-linux-gnu/ld-2.23.so $(command -v $python)'
+                self.executable = '/share/apps/libc6_2.23/lib/x86_64-linux-gnu/ld-2.23.so $(command -v $python)'
+            elif self.machine == 'MYRIAD':
+                for i in ('module unload compilers mpi',
+                          'module load compilers/gnu/4.9.2',
+                          'module load gcc-libs',
+                          'module load cuda/9.0.176-patch4/gnu-4.9.2',
+                          'module load cudnn/7.1.4/cuda-9.0'):
+                    job_commands.append(i)
         else:
             self.executable = '$python'
 
