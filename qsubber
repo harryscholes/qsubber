@@ -99,13 +99,14 @@ class Qsubber:
             raise OSError('$QSUBBERMACHINE is not set')
 
         # GPU options
-        if self.gpu is not None and isinstance(self.gpu, int) and 0 < self.gpu < 5:
-            self.SGE_command.append(f'-l gpu={self.gpu}')
+        if self.gpu is not None:
+            if isinstance(self.gpu, int) and 0 < self.gpu < 5:
+                self.SGE_command.append(f'-l gpu={self.gpu}')
 
-            if os.environ['QSUBBERMACHINE'] == 'CSCLUSTER':
-                self.SGE_command.append('-P gpu')
-        else:
-            raise ArgumentError('Number of GPUs must be an int between 1-4')
+                if os.environ['QSUBBERMACHINE'] == 'CSCLUSTER':
+                    self.SGE_command.append('-P gpu')
+            else:
+                raise ArgumentError('Number of GPUs must be an int between 1-4')
 
         # Parallel environment options
         if self.parallel is None:
