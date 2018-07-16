@@ -143,6 +143,8 @@ class Qsubber:
             for l in f.readlines():
                 job_commands.append(l.rstrip())
 
+        self.executable = '$python'
+
         if self.gpu is not None:
             if self.machine == 'CSCLUSTER':
                 with open(os.path.join(self.dir, 'gpu.sh'), 'r') as f:
@@ -150,6 +152,7 @@ class Qsubber:
                         job_commands.append(l.rstrip())
 
                 self.executable = '/share/apps/libc6_2.23/lib/x86_64-linux-gnu/ld-2.23.so $(command -v $python)'
+
             elif self.machine == 'MYRIAD':
                 for i in ('module unload compilers mpi',
                           'module load compilers/gnu/4.9.2',
@@ -157,8 +160,6 @@ class Qsubber:
                           'module load cuda/9.0.176-patch4/gnu-4.9.2',
                           'module load cudnn/7.1.4/cuda-9.0'):
                     job_commands.append(i)
-        else:
-            self.executable = '$python'
 
         log = ('echo DATE                  $the_date',
                'echo USER                  $USER',
