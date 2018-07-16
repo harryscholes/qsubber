@@ -99,7 +99,7 @@ class Qsubber:
             raise OSError('$QSUBBERMACHINE is not set')
 
         # GPU options
-        if isinstance(self.gpu, int) and 0 < self.gpu < 5:
+        if self.gpu is not None and isinstance(self.gpu, int) and 0 < self.gpu < 5:
             self.SGE_command.append(f'-l gpu={self.gpu}')
 
             if os.environ['QSUBBERMACHINE'] == 'CSCLUSTER':
