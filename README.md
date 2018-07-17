@@ -48,6 +48,7 @@ Example:
 
 ```
 pip install fire
+echo "export QSUBBERMACHINE=<CSCLUSTER,MYRIAD> >> ~/.bash_profile"
 ```
 
 Edit the following files:
@@ -69,7 +70,7 @@ Specify options like this: `--PARAMETER VALUE`
 `working_directory` | `wd` | `$HOME/results`
 `run_time` | `rt` | `1:00:0`
 `memory` | `mem` | `1.8G`
-`scratch` | | `10G`
+`tmpfs` | `scratch` | `10G`
 `parallel` | `pe` | `None` | `4`
 `gpu` | | `None` | `1`
 `submit_command` | `qsub`
