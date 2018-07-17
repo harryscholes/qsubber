@@ -48,7 +48,7 @@ Example:
 
 ```
 pip install fire
-echo "export QSUBBERMACHINE=<CSCLUSTER,MYRIAD> >> ~/.bash_profile"
+echo "export QSUBBERMACHINE=<CSCLUSTER,MYRIAD>" >> ~/.bash_profile
 ```
 
 Edit the following files:
