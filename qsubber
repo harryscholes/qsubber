@@ -87,7 +87,7 @@ class Qsubber:
         # Cluster-specific options
         if self.machine == 'CSCLUSTER':
             self.SGE_command.append(f'-l tmem={self.memory}')
-            self.SGE_command.append(f'-l tscatch={self.tmpfs}')
+            self.SGE_command.append(f'-l tscratch={self.tmpfs}')
 
             if self.gpu is None:
                 self.SGE_command.append(f'-l h_vmem={self.memory}')
