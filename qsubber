@@ -188,6 +188,9 @@ class Qsubber:
         job_commands.append(
             f'{self.executable} {"-u" if not self.buffered else ""} {self.job} && CODE_DONE=true')
 
+        if self.commit:
+            job_commands.append(f'rm -r $output_dir/{repo_to_script_path.split("/")[0]}')
+
         with open(os.path.join(self.dir, 'epilogue.sh'), 'r') as f:
             for l in f.readlines():
                 job_commands.append(l.rstrip())
