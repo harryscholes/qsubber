@@ -150,7 +150,7 @@ class Qsubber:
             repo_to_script_path = self.job.split('/git/')[1]
             job_commands.append(f'repo_path=$(cd $(dirname {self.job}) && git rev-parse --show-toplevel)')
             job_commands.append(f'cp -r $repo_path $output_dir')
-            job_commands.append(f'(cd $output_dir/{repo_to_script_path.split("/")[0]} && git checkout {self.commit})')
+            job_commands.append(f'(cd $output_dir/{repo_to_script_path.split("/")[0]} && git checkout {self.commit} 2> /dev/null)')
             self.job = os.path.join(self.output_dir, repo_to_script_path)
 
         self.executable = '$python'
