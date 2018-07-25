@@ -137,6 +137,13 @@ class Qsubber:
         else:
             job_commands.append(f'virtual_env={self.virtual_env}')
 
+        job_commands.append(f'output_dir={self.output_dir}')
+        job_commands.append(f'results_dir={self.results_dir}')
+
+        with open(os.path.join(self.dir, 'prologue.sh'), 'r') as f:
+            for l in f.readlines():
+                job_commands.append(l.rstrip())
+
         if self.commit is not None:
             # Copy repo to the tmp dir, checkout the commit and modify the
             # job script path
@@ -145,13 +152,6 @@ class Qsubber:
             job_commands.append(f'cp -r $repo_path {self.output_dir}')
             job_commands.append(f'(cd {repo_to_script_path.split("/")[0]} && git checkout {self.commit})')
             self.job = os.path.join(self.output_dir, repo_to_script_path)
-
-        job_commands.append(f'output_dir={self.output_dir}')
-        job_commands.append(f'results_dir={self.results_dir}')
-
-        with open(os.path.join(self.dir, 'prologue.sh'), 'r') as f:
-            for l in f.readlines():
-                job_commands.append(l.rstrip())
 
         self.executable = '$python'
 
