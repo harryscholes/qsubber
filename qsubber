@@ -61,7 +61,8 @@ class Qsubber:
         '''
         self._job_params = {
             'virtual_env': None,
-            'buffered': True}
+            'buffered': True,
+            'commit': None}
 
         if self.machine == 'CSCLUSTER':
             self._job_params['output_dir'] = '/scratch0/$USER/${JOB_NAME}_${JOB_ID}${sti}'
@@ -135,6 +136,15 @@ class Qsubber:
             job_commands.append(f'virtual_env=')
         else:
             job_commands.append(f'virtual_env={self.virtual_env}')
+
+        if self.commit is not None:
+            # Copy repo to the tmp dir, checkout the commit and modify the
+            # job script path
+            repo_to_script_path = self.job.split('/git/')[1]
+            job_commands.append(f'repo_path=$(cd $(dirname {self.job}) && git rev-parse --show-toplevel)')
+            job_commands.append(f'cp -r $repo_path {self.output_dir}')
+            job_commands.append(f'(cd {repo_to_script_path.split("/")[0]} && git checkout {self.commit})')
+            self.job = os.path.join(self.output_dir, repo_to_script_path)
 
         job_commands.append(f'output_dir={self.output_dir}')
         job_commands.append(f'results_dir={self.results_dir}')
