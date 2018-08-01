@@ -147,7 +147,7 @@ class Qsubber:
         if self.commit is not None:
             # Copy repo to the tmp dir, checkout the commit and modify the
             # job script path
-            repo_to_script_path = self.job.split('/git/')[1]
+            repo_to_script_path = self.job.split('/git/')[1].split(' ')[0]
             job_commands.append(f'repo_path=$(cd $(dirname {self.job}) && git rev-parse --show-toplevel)')
             job_commands.append(f'cp -r $repo_path $output_dir')
             job_commands.append(f'(cd $output_dir/{repo_to_script_path.split("/")[0]} && git checkout {self.commit} 2> /dev/null)')
