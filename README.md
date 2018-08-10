@@ -76,6 +76,7 @@ Specify options like this: `--PARAMETER VALUE`
 `submit_command` | `qsub`
 `submission_script_path` | | `None` | `$HOME/qsub.sh`
 `virtual_env` | `venv` | `None` | `conda_env`
+`commit` | | `None` | `2fa78q1`
 `results_dir` | `res` | `$HOME/results`
 `output_dir` | `out` | `/scratch0/$USER/${JOB_NAME}_${JOB_ID}${sti}`
 `buffered` | | `True` | `False` to make `STDOUT` & `STDERR` unbuffered
